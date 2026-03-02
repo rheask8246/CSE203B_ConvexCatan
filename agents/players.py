@@ -6,6 +6,17 @@ that returns one of the playable_actions.
 """
 
 from catanatron import Player
+import os
+import importlib.util
+
+_here = os.path.dirname(__file__)
+_greedy_path = os.path.join(_here, "greedy_agent.py")
+
+_spec = importlib.util.spec_from_file_location("greedy_agent", _greedy_path)
+_greedy = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_greedy)
+
+GreedyAgent = _greedy.GreedyAgent
 
 try:
     from catanatron.cli import register_cli_player
@@ -26,3 +37,5 @@ class ConvexAgent(Player):
 # Register for catanatron-play (--code=agents/players.py)
 if register_cli_player:
     register_cli_player("CONVEX", ConvexAgent)
+    register_cli_player("GREEDY", GreedyAgent)
+    
