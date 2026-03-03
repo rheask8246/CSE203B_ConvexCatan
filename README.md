@@ -50,4 +50,28 @@ Includes:
 
 **Custom agents:** Add in `agents/players.py` and register with `register_cli_player`
 
+## Visualizing games
+
+**Turn-by-turn (terminal):** Run a single game and see VP after each action:
+```bash
+python run_simulation.py --watch
+# or
+python watch_game.py
+```
+
+## Convex agent
+
+Fair resource allocation via LP: maximin production across all players + penalty for resource imbalance. Acts to equalize every player including itself.
+
+**Usage:**
+```bash
+python run_simulation.py --players CONVEX,R,R,R --num 100
+```
+
+**Behavior:**
+- Re-solves LP each turn when it has build options (not just at initial placement)
+- Initial: 2 settlements + 2 roads by LP
+- Mid-game: picks best settlement/city/road from LP scores
+- Non-build: ROLL, then END_TURN, then dev card
+
 See [Catanatron docs](https://docs.catanatron.com/advanced/editor) for game state and action types.

@@ -1,3 +1,7 @@
 # Install from GitHub to get catanatron-play with rich output (progress bar, stats tables)
 # PyPI package does not include the CLI.
 git+https://github.com/bcollazo/catanatron.git
+
+# Convex agent
+numpy>=1.20
+cvxpy>=1.4
