@@ -2,6 +2,8 @@ from collections import Counter
 from catanatron import Player
 from catanatron.models.enums import ActionType
 
+#score(l) = α · pip_score(l) + β · diversification_bonus(l)
+
 PIP_WEIGHTS = {
     2: 1, 3: 2, 4: 3, 5: 4, 6: 5,
     8: 5, 9: 4, 10: 3, 11: 2, 12: 1,

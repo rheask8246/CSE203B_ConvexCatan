@@ -4,7 +4,6 @@ Agent registry for catanatron-play.
 
 import sys
 from pathlib import Path
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from catanatron import Player
@@ -20,6 +19,12 @@ _spec.loader.exec_module(_greedy)
 
 GreedyAgent = _greedy.GreedyAgent
 from catanatron.models.enums import ActionType, ActionPrompt
+
+from pathlib import Path
+from agents.mcts import MCTSPlayer
+from agents.minimax import AlphaBetaPlayer
+from agents.value import ValueFunctionPlayer
+from agents.weighted_random import WeightedRandomPlayer
 
 try:
     from catanatron.cli import register_cli_player
@@ -74,4 +79,8 @@ class ConvexAgent(Player):
 if register_cli_player:
     register_cli_player("CONVEX", ConvexAgent)
     register_cli_player("GREEDY", GreedyAgent)
+    register_cli_player("MCTS", MCTSPlayer)
+    register_cli_player("AB", AlphaBetaPlayer)
+    register_cli_player("VALUE", ValueFunctionPlayer)
+    register_cli_player("WR", WeightedRandomPlayer)
     
