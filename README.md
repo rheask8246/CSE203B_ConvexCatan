@@ -40,6 +40,7 @@ catanatron-play --num 100 --players CONVEX,R,R,R --code agents/players.py
 ```
 
 Includes:
+
 - Progress bar
 - Win distribution by player
 - Last 10 games (seating, turns, VP, winner)
@@ -53,6 +54,7 @@ Includes:
 ## Visualizing games
 
 **Turn-by-turn (terminal):** Run a single game and see VP after each action:
+
 ```bash
 python run_simulation.py --watch
 # or
@@ -64,14 +66,86 @@ python watch_game.py
 Fair resource allocation via LP: maximin production across all players + penalty for resource imbalance. Acts to equalize every player including itself.
 
 **Usage:**
+
 ```bash
 python run_simulation.py --players CONVEX,R,R,R --num 100
 ```
 
 **Behavior:**
+
 - Re-solves LP each turn when it has build options (not just at initial placement)
 - Initial: 2 settlements + 2 roads by LP
 - Mid-game: picks best settlement/city/road from LP scores
 - Non-build: ROLL, then END_TURN, then dev card
 
 See [Catanatron docs](https://docs.catanatron.com/advanced/editor) for game state and action types.
+
+## Evaluation Pipeline
+
+Use these scripts to compare agents with reproducible seeds.
+
+### Available Agents
+
+**Custom Agents:**
+
+- `CONVEX` - Fair resource allocation via LP (maximin + balance penalty)
+- `GREEDY` - Pip score + resource diversification heuristic
+- `MCTS` - Monte Carlo Tree Search (10 simulations default)
+- `AB` - Alpha-Beta minimax search (depth 2 default)
+- `VALUE` - Heuristic-based value function
+- `WR` - Weighted random (prefers cities > settlements > dev cards)
+
+**Built-in Agents:**
+
+- `R` - Pure random (baseline)
+- `W` - Catanatron's weighted random
+
+### 1) Run experiments
+
+```bash
+python evaluate.py --num-games 300 --outdir results
+# custom scenarios:
+python evaluate.py \
+  --lineup R,R,R,R \
+  --lineup GREEDY,R,R,R \
+  --lineup CONVEX,R,R,R \
+  --lineup MCTS,AB,VALUE,WR \
+  --num-games 300 \
+  --outdir results
+```
+
+Outputs:
+
+- `player_metrics.csv` (one row per player per game)
+- `game_metrics.csv` (one row per game)
+- `metadata.json`
+
+### 2) Aggregate metrics + confidence intervals
+
+```bash
+python analyze_results.py --input-dir results
+```
+
+Outputs in `results/analysis`:
+
+- `agent_summary.csv`
+- `lineup_summary.csv`
+- `seat_summary.csv`
+- `pairwise_vp_diff.csv`
+- `game_summary.csv`
+
+### 3) Generate plots
+
+```bash
+python visualize_results.py --input-dir results
+```
+
+Outputs in `results/plots`:
+
+- `win_rate_ci.png`
+- `final_vp_violin.png`
+- `turns_box.png`
+- `resources_held_box.png`
+- `pairwise_vp_diff_heatmap.png`
+- `pareto_fairness_winrate_compute.png`
+- `seat_effect_win_rate.png`

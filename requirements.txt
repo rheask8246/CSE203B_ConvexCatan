@@ -5,3 +5,8 @@ git+https://github.com/bcollazo/catanatron.git
 # Convex agent
 numpy>=1.20
 cvxpy>=1.4
+
+# Evaluation + plotting
+pandas>=2.0
+matplotlib>=3.7
+seaborn>=0.13
