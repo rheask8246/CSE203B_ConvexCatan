@@ -191,7 +191,7 @@ def run() -> None:
         "global_game_id",
         "seed",
         "input_slot",
-        "seat_index",
+        "turn_order",
         "color",
         "agent",
         "is_winner",
@@ -278,12 +278,12 @@ def run() -> None:
                 winner_color = game.winning_color()
                 num_turns = int(state.num_turns)
 
-                # state.players is seating order (P0..P3)
+                # state.players is turn order (P0=first, P1=second, P2=third, P3=fourth)
                 seat_players: List[TimedPlayer] = list(state.players)
                 vps = []
                 colors = []
-                for seat_idx, p in enumerate(seat_players):
-                    vp = int(state.player_state[pkey(seat_idx, "ACTUAL_VICTORY_POINTS")])
+                for turn_order, p in enumerate(seat_players):
+                    vp = int(state.player_state[pkey(turn_order, "ACTUAL_VICTORY_POINTS")])
                     vps.append(vp)
                     colors.append(p.color)
 
@@ -319,26 +319,26 @@ def run() -> None:
                     }
                 )
 
-                for seat_idx, p in enumerate(seat_players):
+                for turn_order, p in enumerate(seat_players):
                     color = p.color
-                    vp = vps[seat_idx]
-                    rank = ranks[seat_idx]
-                    public_vp = int(state.player_state[pkey(seat_idx, "VICTORY_POINTS")])
-                    roads_built = MAX_ROADS - int(state.player_state[pkey(seat_idx, "ROADS_AVAILABLE")])
+                    vp = vps[turn_order]
+                    rank = ranks[turn_order]
+                    public_vp = int(state.player_state[pkey(turn_order, "VICTORY_POINTS")])
+                    roads_built = MAX_ROADS - int(state.player_state[pkey(turn_order, "ROADS_AVAILABLE")])
                     settlements_built = MAX_SETTLEMENTS - int(
-                        state.player_state[pkey(seat_idx, "SETTLEMENTS_AVAILABLE")]
+                        state.player_state[pkey(turn_order, "SETTLEMENTS_AVAILABLE")]
                     )
-                    cities_built = MAX_CITIES - int(state.player_state[pkey(seat_idx, "CITIES_AVAILABLE")])
+                    cities_built = MAX_CITIES - int(state.player_state[pkey(turn_order, "CITIES_AVAILABLE")])
 
-                    has_longest_road = bool(state.player_state[pkey(seat_idx, "HAS_ROAD")])
-                    has_largest_army = bool(state.player_state[pkey(seat_idx, "HAS_ARMY")])
-                    longest_road_length = int(state.player_state[pkey(seat_idx, "LONGEST_ROAD_LENGTH")])
-                    knights_played = int(state.player_state[pkey(seat_idx, "PLAYED_KNIGHT")])
-                    wood_in_hand = int(state.player_state[pkey(seat_idx, "WOOD_IN_HAND")])
-                    brick_in_hand = int(state.player_state[pkey(seat_idx, "BRICK_IN_HAND")])
-                    sheep_in_hand = int(state.player_state[pkey(seat_idx, "SHEEP_IN_HAND")])
-                    wheat_in_hand = int(state.player_state[pkey(seat_idx, "WHEAT_IN_HAND")])
-                    ore_in_hand = int(state.player_state[pkey(seat_idx, "ORE_IN_HAND")])
+                    has_longest_road = bool(state.player_state[pkey(turn_order, "HAS_ROAD")])
+                    has_largest_army = bool(state.player_state[pkey(turn_order, "HAS_ARMY")])
+                    longest_road_length = int(state.player_state[pkey(turn_order, "LONGEST_ROAD_LENGTH")])
+                    knights_played = int(state.player_state[pkey(turn_order, "PLAYED_KNIGHT")])
+                    wood_in_hand = int(state.player_state[pkey(turn_order, "WOOD_IN_HAND")])
+                    brick_in_hand = int(state.player_state[pkey(turn_order, "BRICK_IN_HAND")])
+                    sheep_in_hand = int(state.player_state[pkey(turn_order, "SHEEP_IN_HAND")])
+                    wheat_in_hand = int(state.player_state[pkey(turn_order, "WHEAT_IN_HAND")])
+                    ore_in_hand = int(state.player_state[pkey(turn_order, "ORE_IN_HAND")])
                     total_resources_in_hand = (
                         wood_in_hand + brick_in_hand + sheep_in_hand + wheat_in_hand + ore_in_hand
                     )
@@ -353,7 +353,7 @@ def run() -> None:
                             "global_game_id": global_game_id,
                             "seed": seed,
                             "input_slot": input_slot_by_color[color],
-                            "seat_index": seat_idx,
+                            "turn_order": turn_order,
                             "color": color.value,
                             "agent": code_by_color[color],
                             "is_winner": int(color == winner_color),

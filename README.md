@@ -43,7 +43,7 @@ Includes:
 
 - Progress bar
 - Win distribution by player
-- Last 10 games (seating, turns, VP, winner)
+- Last 10 games (turn order, number of turns, VP, winner)
 - Player summary (wins, avg VP, settlements, cities, roads, army, dev VP)
 - Game summary (avg turns, duration)
 
@@ -146,6 +146,8 @@ Outputs in `results/plots`:
 - `final_vp_violin.png`
 - `turns_box.png`
 - `resources_held_box.png`
+<!-- - `fairness_gini_by_agent.png` (commented out - misleading for game-level metric) -->
+- `fairness_gini_by_lineup.png`
 - `pairwise_vp_diff_heatmap.png`
 - `pareto_fairness_winrate_compute.png`
-- `seat_effect_win_rate.png`
+- `turn_order_effect_win_rate.png`
