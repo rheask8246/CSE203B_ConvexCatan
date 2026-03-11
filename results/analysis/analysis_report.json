@@ -1,18 +1,15 @@
 {
   "input_dir": "results",
   "rows": {
-    "player_metrics": 3600,
-    "game_metrics": 900
+    "player_metrics": 2400,
+    "game_metrics": 600
   },
   "agents": [
-    "AB",
-    "VALUE",
-    "CONVEX",
-    "GREEDY",
-    "R",
     "WR",
-    "MCTS"
+    "R",
+    "GREEDY",
+    "CONVEX"
   ],
-  "best_win_rate_agent": "AB",
-  "best_win_rate": 0.9966666666666667
+  "best_win_rate_agent": "WR",
+  "best_win_rate": 0.33666666666666667
 }

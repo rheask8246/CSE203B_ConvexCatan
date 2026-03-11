@@ -101,6 +101,37 @@ def main() -> None:
     else:
         print("Skipping resources-held plot: total_resources_in_hand not found in player_metrics.csv")
 
+    # 3c) Standalone fairness distribution by agent
+    # NOTE: Commented out - misleading because vp_gini_game is a game-level metric,
+    # so all agents in the same game share the same value. Use lineup plot instead.
+    # if "vp_gini_game" in players.columns:
+    #     fig, ax = plt.subplots(figsize=(10, 6))
+    #     sns.boxplot(data=players, x="agent", y="vp_gini_game", ax=ax, color="#CDB4DB")
+    #     ax.set_title("Fairness Distribution by Agent")
+    #     ax.set_xlabel("Agent")
+    #     ax.set_ylabel("Game VP Gini (lower = fairer)")
+    #     fig.tight_layout()
+    #     fig.savefig(outdir / "fairness_gini_by_agent.png", dpi=200)
+    #     plt.close(fig)
+    # else:
+    #     print("Skipping fairness plot: vp_gini_game not found in player_metrics.csv")
+
+    # 3d) Fairness distribution by lineup
+    if "vp_gini_game" in players.columns and "lineup" in players.columns:
+        fig, ax = plt.subplots(figsize=(12, 6))
+        # Sort lineups by median Gini for better visualization
+        lineup_order = players.groupby("lineup")["vp_gini_game"].median().sort_values().index
+        sns.boxplot(data=players, x="lineup", y="vp_gini_game", order=lineup_order, ax=ax, color="#B5838D")
+        ax.set_title("Fairness Distribution by Lineup")
+        ax.set_xlabel("Lineup")
+        ax.set_ylabel("Game VP Gini (lower = fairer)")
+        plt.xticks(rotation=45, ha='right')
+        fig.tight_layout()
+        fig.savefig(outdir / "fairness_gini_by_lineup.png", dpi=200)
+        plt.close(fig)
+    else:
+        print("Skipping lineup fairness plot: vp_gini_game or lineup not found in player_metrics.csv")
+
     # 4) Pairwise VP differential heatmap
     fig, ax = plt.subplots(figsize=(8, 7))
     sns.heatmap(pairwise, annot=True, fmt=".2f", cmap="RdBu_r", center=0.0, linewidths=0.5, ax=ax)
@@ -135,11 +166,11 @@ def main() -> None:
     fig.savefig(outdir / "pareto_fairness_winrate_compute.png", dpi=200)
     plt.close(fig)
 
-    # 6) Seat-position sensitivity
+    # 6) Turn-order sensitivity
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.lineplot(
         data=seat_summary,
-        x="seat_index",
+        x="turn_order",
         y="win_rate",
         hue="agent",
         marker="o",
@@ -147,11 +178,11 @@ def main() -> None:
         ax=ax,
     )
     ax.set_xticks([0, 1, 2, 3])
-    ax.set_xlabel("Seat Index")
+    ax.set_xlabel("Turn Order")
     ax.set_ylabel("Win Rate")
-    ax.set_title("Seat-Position Effect on Win Rate")
+    ax.set_title("Turn-Order Effect on Win Rate")
     fig.tight_layout()
-    fig.savefig(outdir / "seat_effect_win_rate.png", dpi=200)
+    fig.savefig(outdir / "turn_order_effect_win_rate.png", dpi=200)
     plt.close(fig)
 
     print(f"Saved plots to: {outdir}")

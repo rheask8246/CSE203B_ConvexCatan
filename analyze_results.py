@@ -100,14 +100,14 @@ def main() -> None:
     agent_summary = pd.DataFrame(agent_rows).sort_values("win_rate", ascending=False)
 
     seat_summary = (
-        players.groupby(["agent", "seat_index"], as_index=False)
+        players.groupby(["agent", "turn_order"], as_index=False)
         .agg(
             n=("is_winner", "size"),
             win_rate=("is_winner", "mean"),
             avg_final_vp=("final_vp", "mean"),
             avg_rank=("rank", "mean"),
         )
-        .sort_values(["agent", "seat_index"])
+        .sort_values(["agent", "turn_order"])
     )
 
     lineup_summary = (
