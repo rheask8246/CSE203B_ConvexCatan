@@ -1,8 +1,9 @@
 """Run full games: ConvexAgent vs Random vs SelfishAgent, sweeping lambda.
+Also runs baseline: R, R, SELFISH (no ConvexAgent) for comparison.
 
-Plays CONVEX(lambda), R, SELFISH for each lambda and each selfish agent.
+Plays CONVEX(lambda), R, SELFISH and R, R, SELFISH for each selfish agent.
 Tracks Gini of expected production after initial placement (what the LP optimizes).
-Eliminates confound of in-game play quality.
+Plot both on same axes to show ConvexAgent's equalizing effect.
 
 Example:
     python evaluate_convex_sweep.py --num-games 100 --outdir results/convex_sweep
@@ -96,17 +97,41 @@ def run() -> None:
     ]
 
     game_fields = [
-        "lambda", "selfish_agent", "game_idx", "seed",
+        "lineup_type", "lambda", "selfish_agent", "game_idx", "seed",
         "prod_gini", "prod_min", "prod_max", "prod_range",
         "winner_agent", "num_turns",
     ]
     player_fields = [
-        "lambda", "selfish_agent", "game_idx", "seed", "turn_order", "agent",
+        "lineup_type", "lambda", "selfish_agent", "game_idx", "seed", "turn_order", "agent",
         "expected_production", "final_vp", "total_resources_in_hand", "prod_gini_game",
     ]
 
     total = len(lambda_values) * len(args.selfish_agents) * args.num_games
+    total += len(args.selfish_agents) * args.num_games  # baseline
     step = 0
+
+    def run_game(players, agents, lam, selfish_code, game_idx, lineup_type):
+        nonlocal step
+        seed = args.seed_start + game_idx
+        game = Game(players, seed=seed, vps_to_win=10)
+        while game.state.is_initial_build_phase and game.winning_color() is None:
+            game.play_tick()
+        prod_gini, prod_by_player = expected_production_gini(game)
+        prod_min, prod_max = float(prod_by_player.min()), float(prod_by_player.max())
+        prod_range = prod_max - prod_min
+        game.play()
+        state = game.state
+        vps = [int(state.player_state[pkey(i, "ACTUAL_VICTORY_POINTS")]) for i in range(3)]
+        winner_color = game.winning_color()
+        winner_agent = agents[state.colors.index(winner_color)] if winner_color else "NONE"
+        return {
+            "game": {"lineup_type": lineup_type, "lambda": lam, "selfish_agent": selfish_code,
+                     "game_idx": game_idx, "seed": seed, "prod_gini": round(prod_gini, 6),
+                     "prod_min": round(prod_min, 6), "prod_max": round(prod_max, 6),
+                     "prod_range": round(prod_range, 6), "winner_agent": winner_agent,
+                     "num_turns": int(state.num_turns)},
+            "players": prod_by_player, "vps": vps, "agents": agents, "state": state,
+        }
 
     with (outdir / "game_metrics.csv").open("w", newline="") as gf, \
          (outdir / "player_metrics.csv").open("w", newline="") as pf:
@@ -118,73 +143,42 @@ def run() -> None:
         for lam in lambda_values:
             for selfish_code in args.selfish_agents:
                 selfish_factory = get_selfish_factory(selfish_code)
-
                 for game_idx in range(args.num_games):
-                    seed = args.seed_start + game_idx
                     step += 1
-
-                    # Lineup: CONVEX(lambda), R, SELFISH
-                    convex = ConvexAgent(Color.RED, lambda_value=lam)
-                    random_p = RandomPlayer(Color.BLUE)
-                    selfish_p = selfish_factory(Color.ORANGE)
-                    players = [convex, random_p, selfish_p]
-
-                    game = Game(players, seed=seed, vps_to_win=10)
-                    # Step until past initial placement so we can capture expected production
-                    while game.state.is_initial_build_phase and game.winning_color() is None:
-                        game.play_tick()
-                    prod_gini, prod_by_player = expected_production_gini(game)
-                    prod_min, prod_max = float(prod_by_player.min()), float(prod_by_player.max())
-                    prod_range = prod_max - prod_min
-
-                    # Continue playing to completion
-                    game.play()
-
-                    state = game.state
-                    vps = [
-                        int(state.player_state[pkey(i, "ACTUAL_VICTORY_POINTS")])
-                        for i in range(3)
-                    ]
+                    players = [ConvexAgent(Color.RED, lambda_value=lam), RandomPlayer(Color.BLUE), selfish_factory(Color.ORANGE)]
                     agents = ["CONVEX", "R", selfish_code]
-                    winner_color = game.winning_color()
-                    winner_agent = agents[state.colors.index(winner_color)] if winner_color else "NONE"
-
-                    g_writer.writerow({
-                        "lambda": lam,
-                        "selfish_agent": selfish_code,
-                        "game_idx": game_idx,
-                        "seed": seed,
-                        "prod_gini": round(prod_gini, 6),
-                        "prod_min": round(prod_min, 6),
-                        "prod_max": round(prod_max, 6),
-                        "prod_range": round(prod_range, 6),
-                        "winner_agent": winner_agent,
-                        "num_turns": int(state.num_turns),
-                    })
-
+                    out = run_game(players, agents, lam, selfish_code, game_idx, "CONVEX")
+                    g_writer.writerow(out["game"])
                     for i in range(3):
-                        total_res = (
-                            int(state.player_state[pkey(i, "WOOD_IN_HAND")])
-                            + int(state.player_state[pkey(i, "BRICK_IN_HAND")])
-                            + int(state.player_state[pkey(i, "SHEEP_IN_HAND")])
-                            + int(state.player_state[pkey(i, "WHEAT_IN_HAND")])
-                            + int(state.player_state[pkey(i, "ORE_IN_HAND")])
-                        )
+                        total_res = sum(int(out["state"].player_state[pkey(i, r)]) for r in ["WOOD_IN_HAND", "BRICK_IN_HAND", "SHEEP_IN_HAND", "WHEAT_IN_HAND", "ORE_IN_HAND"])
                         p_writer.writerow({
-                            "lambda": lam,
-                            "selfish_agent": selfish_code,
-                            "game_idx": game_idx,
-                            "seed": seed,
-                            "turn_order": i,
-                            "agent": agents[i],
-                            "expected_production": round(float(prod_by_player[i]), 6),
-                            "final_vp": vps[i],
-                            "total_resources_in_hand": total_res,
-                            "prod_gini_game": round(prod_gini, 6),
+                            "lineup_type": "CONVEX", "lambda": lam, "selfish_agent": selfish_code,
+                            "game_idx": game_idx, "seed": out["game"]["seed"], "turn_order": i, "agent": agents[i],
+                            "expected_production": round(float(out["players"][i]), 6), "final_vp": out["vps"][i],
+                            "total_resources_in_hand": total_res, "prod_gini_game": out["game"]["prod_gini"],
                         })
-
                     if step % 50 == 0 or step == total:
                         print(f"  progress: {step}/{total} games")
+
+        # Baseline: R, R, SELFISH (no ConvexAgent)
+        for selfish_code in args.selfish_agents:
+            selfish_factory = get_selfish_factory(selfish_code)
+            for game_idx in range(args.num_games):
+                step += 1
+                players = [RandomPlayer(Color.RED), RandomPlayer(Color.BLUE), selfish_factory(Color.ORANGE)]
+                agents = ["R", "R", selfish_code]
+                out = run_game(players, agents, float("nan"), selfish_code, game_idx, "BASELINE")
+                g_writer.writerow(out["game"])
+                for i in range(3):
+                    total_res = sum(int(out["state"].player_state[pkey(i, r)]) for r in ["WOOD_IN_HAND", "BRICK_IN_HAND", "SHEEP_IN_HAND", "WHEAT_IN_HAND", "ORE_IN_HAND"])
+                    p_writer.writerow({
+                        "lineup_type": "BASELINE", "lambda": float("nan"), "selfish_agent": selfish_code,
+                        "game_idx": game_idx, "seed": out["game"]["seed"], "turn_order": i, "agent": agents[i],
+                        "expected_production": round(float(out["players"][i]), 6), "final_vp": out["vps"][i],
+                        "total_resources_in_hand": total_res, "prod_gini_game": out["game"]["prod_gini"],
+                    })
+                if step % 50 == 0 or step == total:
+                    print(f"  progress: {step}/{total} games")
 
     meta = {
         "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
