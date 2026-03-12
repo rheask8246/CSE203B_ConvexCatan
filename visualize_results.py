@@ -177,7 +177,8 @@ def main() -> None:
         linewidth=2,
         ax=ax,
     )
-    ax.set_xticks([0, 1, 2, 3])
+    turn_orders = sorted(seat_summary["turn_order"].dropna().unique().astype(int).tolist())
+    ax.set_xticks(turn_orders)
     ax.set_xlabel("Turn Order")
     ax.set_ylabel("Win Rate")
     ax.set_title("Turn-Order Effect on Win Rate")

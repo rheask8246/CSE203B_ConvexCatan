@@ -1,0 +1,2 @@
+lineup,n_games,avg_turns,avg_duration_s,avg_vp_std,avg_vp_gini,avg_vp_range
+"CONVEX,R,GREEDY",100,343.04,0.5290683899999999,3.0102812799999996,0.26622252,6.97

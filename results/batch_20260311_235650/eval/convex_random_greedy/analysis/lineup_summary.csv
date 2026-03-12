@@ -1,0 +1,4 @@
+lineup,agent,n,win_rate,avg_final_vp,avg_rank,avg_turns,avg_game_vp_gini
+"CONVEX,R,GREEDY",R,100,0.49,6.96,1.74,343.04,0.26622252
+"CONVEX,R,GREEDY",GREEDY,100,0.29,6.06,1.93,343.04,0.26622252
+"CONVEX,R,GREEDY",CONVEX,100,0.22,5.23,2.18,343.04,0.26622252

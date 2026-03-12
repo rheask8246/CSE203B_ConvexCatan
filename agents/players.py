@@ -97,3 +97,13 @@ if register_cli_player:
     register_cli_player("VALUE", ValueFunctionPlayer)
     register_cli_player("WR", WeightedRandomPlayer)
     
+# Example Setups:
+# CONVEX,RANDOM,GREEDY
+# CONVEX,RANDOM,MCTS
+# CONVEX,RANDOM,AB
+# CONVEX,RANDOM,VALUE
+# CONVEX,RANDOM,WR
+
+# do each of these and change lambda from 0 --> 2 (25 equally spaced points between 0 and 2) incrementally to see how it affects the tradeoff between win rate and fairness
+# start with 100 games and go from there...
+# add a Production per Agent plot

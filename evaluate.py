@@ -2,7 +2,7 @@
 
 Examples:
     python evaluate.py --num-games 300 --outdir results/exp1
-    python evaluate.py --lineup R,R,R,R --lineup GREEDY,R,R,R --lineup CONVEX,R,R,R
+    python evaluate.py --lineup R,R,R --lineup GREEDY,R,R --lineup CONVEX,R,R
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ def parse_args() -> argparse.Namespace:
         "--lineup",
         action="append",
         default=[],
-        help="One 4-player lineup, comma-separated (e.g. CONVEX,R,R,R). Repeat for multiple scenarios.",
+        help="One 3-player lineup, comma-separated (e.g. CONVEX,R,R). Repeat for multiple scenarios.",
     )
     parser.add_argument("--num-games", type=int, default=200, help="Games per lineup")
     parser.add_argument("--seed-start", type=int, default=1, help="First RNG seed")
@@ -89,9 +89,9 @@ def parse_args() -> argparse.Namespace:
 def default_lineups() -> List[str]:
     '''Return default lineups if none are provided via command-line arguments.'''
     return [
-        "R,R,R,R",
-        "GREEDY,R,R,R",
-        "CONVEX,R,R,R",
+        "R,R,R",
+        "GREEDY,R,R",
+        "CONVEX,R,R",
     ]
 
 
@@ -117,8 +117,8 @@ def get_agent_factory(code: str) -> Callable[[Color], Player]:
 def parse_lineup(lineup: str) -> List[str]:
     '''Parse a lineup string into a list of agent codes, validating the format and supported agents.'''
     parts = [p.strip().upper() for p in lineup.split(",") if p.strip()]
-    if len(parts) != 4:
-        raise ValueError(f"Lineup must contain exactly 4 players: '{lineup}'")
+    if len(parts) != 3:
+        raise ValueError(f"Lineup must contain exactly 3 players: '{lineup}'")
     for part in parts:
         get_agent_factory(part)
     return parts

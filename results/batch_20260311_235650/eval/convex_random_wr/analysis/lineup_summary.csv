@@ -1,0 +1,4 @@
+lineup,agent,n,win_rate,avg_final_vp,avg_rank,avg_turns,avg_game_vp_gini
+"CONVEX,R,WR",WR,100,0.52,7.42,1.66,280.53,0.25496949
+"CONVEX,R,WR",CONVEX,100,0.25,5.51,2.11,280.53,0.25496949
+"CONVEX,R,WR",R,100,0.23,5.76,2.05,280.53,0.25496949
