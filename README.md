@@ -192,11 +192,94 @@ python visualize_lambda_sweep.py --input-dir results/lambda_sweep --target-lambd
 
 Outputs in `results/lambda_sweep/plots`:
 
-- `gini_vs_lambda.png`
-- `entropy_vs_lambda.png`
-- `total_expected_production_vs_lambda.png`
-- `pareto_total_production_vs_gini.png`
-- `entropy_violin_by_method.png`
-- `max_min_ratio_by_method.png`
-- `production_gap_hist_by_method.png`
-- `dual_heatmap_capacity.png`
+- `gini_vs_lambda.png` - Gini vs lambda (line + 95% CI)
+- `entropy_vs_lambda.png` - Mean Shannon entropy vs lambda
+- `total_expected_production_vs_lambda.png` - Efficiency vs lambda
+- `pareto_total_production_vs_gini.png` - Pareto curve (one point per lambda)
+- `entropy_violin_by_method.png` - ConvexAgent vs Random vs WeightedRandom
+- `max_min_ratio_by_method.png` - Bar chart at lambda=0.5
+- `production_gap_hist_by_method.png` - Distribution of (max - min) per game
+- `dual_heatmap_capacity.png` - Shadow prices (node strip)
+- `dual_heatmap_board_layout.png` - Shadow prices on board topology
+
+## ConvexAgent vs Selfish Opponents (Full Games)
+
+Plays **CONVEX(lambda), R, SELFISH** for each lambda and each selfish agent (GREEDY, AB, MCTS, VALUE, WR). Tracks **Gini of expected production after initial placement** (what the LP directly optimizes), eliminating the confound of in-game play quality.
+
+### 1) Run evaluation
+
+Plays CONVEX, R, and one selfish agent — 100 games per (lambda, selfish_agent). All 5 selfish agents (GREEDY, AB, MCTS, VALUE, WR) are included by default.
+
+```bash
+# Quick (5 games per combo, ~2 min)
+python evaluate_convex_sweep.py --num-games 5 --lambda-count 10 --outdir results/convex_sweep_quick
+
+# Full (100 games per combo, ~30-60 min)
+python evaluate_convex_sweep.py \
+  --num-games 100 \
+  --lambda-start 0 \
+  --lambda-end 2 \
+  --lambda-count 10 \
+  --outdir results/convex_sweep
+```
+
+### 2) Generate plots (overlaid by opponent)
+
+```bash
+python visualize_convex_sweep.py --input-dir results/convex_sweep
+# or for quick run:
+python visualize_convex_sweep.py --input-dir results/convex_sweep_quick
+```
+
+Outputs in `results/convex_sweep/plots`:
+
+- `prod_gini_vs_lambda_by_opponent.png` - Expected production Gini vs lambda (overlaid by opponent)
+- `prod_range_vs_lambda_by_opponent.png` - Production range vs lambda by opponent
+- `prod_gini_by_opponent_at_lambda05.png` - Bar chart: fairness by opponent at lambda=0.5
+- `resources_by_opponent.png` - Final resources held: Convex vs R vs Selfish
+
+## Commands to test the pipeline
+
+**Quick test (few minutes):**
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt   # if not already installed
+
+# Lambda sweep (initial placement only): 20 seeds, 10 lambda points
+python lambda_sweep.py --num-seeds 20 --lambda-count 10 --outdir results/lambda_quick
+python visualize_lambda_sweep.py --input-dir results/lambda_quick --target-lambda 0.5
+
+# Convex vs selfish (full games): 5 games per combo, 10 lambda, all 5 selfish agents
+python evaluate_convex_sweep.py --num-games 5 --lambda-count 10 --outdir results/convex_sweep_quick
+python visualize_convex_sweep.py --input-dir results/convex_sweep_quick
+```
+
+**Full Convex vs selfish (100 games per combo, ~30-60 min):**
+```bash
+python evaluate_convex_sweep.py \
+  --num-games 100 \
+  --lambda-start 0 \
+  --lambda-end 2 \
+  --lambda-count 10 \
+  --outdir results/convex_sweep
+
+python visualize_convex_sweep.py --input-dir results/convex_sweep
+```
+
+**Full lambda sweep (initial placement only, 200 seeds):**
+```bash
+python lambda_sweep.py \
+  --num-seeds 200 \
+  --lambda-start 0 \
+  --lambda-end 2 \
+  --lambda-count 25 \
+  --num-players 3 \
+  --outdir results/lambda_sweep
+
+python visualize_lambda_sweep.py --input-dir results/lambda_sweep --target-lambda 0.5
+```
+
+**Run everything (evaluations + lambda sweep):**
+```bash
+bash run_all.sh
+```

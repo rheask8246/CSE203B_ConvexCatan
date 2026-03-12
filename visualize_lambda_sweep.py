@@ -201,14 +201,18 @@ def main() -> None:
     fig.savefig(outdir / "max_min_ratio_by_method.png", dpi=220)
     plt.close(fig)
 
-    # 7) Production gap distributions by method (overlapping histograms)
+    # 7) Production gap (max - min across players) distributions by method (overlapping histograms)
+    if "production_gap" not in comp_games.columns:
+        comp_games["production_gap"] = comp_games["strongest_production"] - comp_games["weakest_production"]
     fig, ax = plt.subplots(figsize=(10, 6))
-    methods = sorted(comp_players["method"].dropna().unique().tolist())
+    methods = sorted(comp_games["method"].dropna().unique().tolist())
     palette = sns.color_palette("Set2", n_colors=max(3, len(methods)))
     for i, m in enumerate(methods):
-        vals = comp_players[comp_players["method"] == m]["gap_from_max"].to_numpy(dtype=float)
-        ax.hist(vals, bins=20, alpha=0.35, density=True, label=m, color=palette[i])
-    ax.set_xlabel("Production Gap from Best Player")
+        vals = comp_games[comp_games["method"] == m]["production_gap"].to_numpy(dtype=float)
+        vals = vals[np.isfinite(vals)]
+        if vals.size > 0:
+            ax.hist(vals, bins=20, alpha=0.35, density=True, label=m, color=palette[i])
+    ax.set_xlabel("Production Gap (max - min across players)")
     ax.set_ylabel("Density")
     ax.set_title(f"Production Gap Distribution by Method (lambda={chosen_lambda:.2f})")
     ax.legend(loc="best", frameon=True)

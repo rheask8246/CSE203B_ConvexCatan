@@ -71,6 +71,24 @@ def summarize_production(rho):
     }
 
 
+def expected_production_gini(game):
+    """Gini of expected production across players from current buildings.
+    Uses settlements (1x) and cities (2x) production. What the LP directly optimizes."""
+    A = _production_matrix(game)
+    state = game.state
+    colors = list(state.colors)
+    v = []
+    for color in colors:
+        rho_p = np.zeros(N_RESOURCES, dtype=float)
+        for btype, mult in ((SETTLEMENT, 1.0), (CITY, 2.0)):
+            nodes = state.buildings_by_color.get(color, {}).get(btype, [])
+            for n in nodes:
+                if 0 <= n < A.shape[0]:
+                    rho_p += mult * A[n, :]
+        v.append(float(np.dot(rho_p, W)))
+    return gini(v), np.array(v)
+
+
 def _production_matrix(game):
     """A[l,k] = a_lk = expected production rate of resource k at location l."""
     cmap = game.state.board.map
