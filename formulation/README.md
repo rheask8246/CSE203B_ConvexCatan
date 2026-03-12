@@ -128,14 +128,14 @@ the within-player resource imbalance via a convex quadratic term. Define
 
 The Stage 1 problem is:
 
-- maximize
+maximize
 
-  $$
-  t \;-\; \lambda \sum_{p=1}^P \bigl\|\mu_p - \bar\mu_p \mathbf{1}\bigr\|_2^2,
-  $$
+$$
+t \;-\; \lambda \sum_{p=1}^P \bigl\|\mu_p - \bar\mu_p \mathbf{1}\bigr\|_2^2,
+$$
 
-  subject to the constraints above, where $\lambda \ge 0$ trades off fairness
-  against efficiency.
+subject to the constraints above, where $\lambda \ge 0$ trades off fairness
+against efficiency.
 
 This objective is concave (linear term minus a convex quadratic), and all
 constraints are linear, so the problem is a convex optimization problem with a
@@ -186,7 +186,7 @@ where:
 
 In this “robber-aware but not robber-optimizing” variant, the $\rho_h$ are
 treated as **exogenous parameters**, not LP variables. Because they only appear
-through $a^{\text{rob}}_{l,k}$, the decision variables $x_{p,l}$ still enter
+through $a^{\text{rob}}\_{l,k}$, the decision variables $x_{p,l}$ still enter
 the objective and constraints linearly. We simply solve the same Stage 1 problem
 with $A$ replaced by $A^{\text{rob}}$:
 
@@ -336,15 +336,15 @@ For this per-turn subproblem, we define:
 
 - Post-trade quantity:
 
-  $$
-  q_r = q_r^0 + t^{\text{in}}_r - t^{\text{out}}_r
-  $$
+$$
+q_r = q_r^0 + t^{\text{in}}_r - t^{\text{out}}_r
+$$
 
 - Non-negativity:
 
-  $$
-  q_r \ge 0 \quad \text{for all } r \quad (\text{cannot overspend}).
-  $$
+$$
+q_r \ge 0 \quad \text{for all } r \quad (\text{cannot overspend}).
+$$
 
 These are linear in the decision variables $t^{\text{in}}_r, t^{\text{out}}_r$.
 
