@@ -244,3 +244,88 @@ def score_robber_hexes_fairness(game):
         scores[h] = baseline_range - new_range
 
     return scores
+
+
+def solve_trade_and_build(game, our_color, alpha=1.0, beta=0.1):
+    """
+    Per-turn convex trading helper for a single player (Option A).
+
+    This sets up a small convex problem for the acting player that decides how
+    much to trade in/out of each resource this turn, with a fairness-aligned
+    objective on their post-trade hand. It does NOT execute actions or change
+    global placements; it only returns suggested net trades.
+
+    Variables (length = N_RESOURCES):
+      - t_in[r]  >= 0 : amount of resource r traded in
+      - t_out[r] >= 0 : amount of resource r traded out
+
+    Constraints:
+      - q[r] = q0[r] + t_in[r] - t_out[r]   (post-turn hand)
+      - q[r] >= 0                           (cannot overspend)
+      - sum_r t_in[r] <= (1 / rho) * sum_r t_out[r]  (aggregated trade ratio)
+
+    Objective:
+      maximize   alpha * sum_r q[r]  -  beta * || q - mean(q) * 1 ||_2^2
+
+    This keeps the problem convex (linear constraints, concave objective) and
+    encourages both higher total resources and a more balanced hand. The
+    returned trades can be mapped to concrete MARITIME_TRADE actions by the
+    agent if desired.
+    """
+    state = game.state
+
+    # Current hand q0[r] for our_color.
+    q0 = np.zeros(N_RESOURCES, dtype=float)
+    try:
+        hand = state.hands.get(our_color, {})
+        for idx, res in enumerate(RESOURCES):
+            q0[idx] = hand.get(res, 0)
+    except Exception:
+        # If hand structure is different, fall back to zeros (no trades).
+        return None, None
+
+    # Best available trade ratio rho from ports or bank.
+    rho = 4.0  # default 4:1 bank trade
+    try:
+        port_resources = state.board.get_player_port_resources(our_color)
+        if port_resources:
+            # If player has a generic 3:1 port (represented as None), use 3:1.
+            if None in port_resources:
+                rho = 3.0
+            else:
+                # Has at least one 2:1 specific port; approximate with 2:1.
+                rho = 2.0
+    except Exception:
+        pass
+
+    # Decision variables: trades in/out of each resource.
+    t_in = cp.Variable(N_RESOURCES, nonneg=True)
+    t_out = cp.Variable(N_RESOURCES, nonneg=True)
+
+    # Post-turn hand.
+    q = q0 + t_in - t_out
+
+    constraints = []
+    # Cannot overspend.
+    constraints.append(q >= 0)
+    # Aggregated trade-ratio constraint.
+    constraints.append(cp.sum(t_in) <= (1.0 / rho) * cp.sum(t_out))
+
+    # Fairness-aligned objective on the hand: more total resources + better balance.
+    if N_RESOURCES > 0:
+        q_mean = cp.sum(q) / N_RESOURCES
+        imbalance = cp.sum_squares(q - q_mean)
+    else:
+        imbalance = 0.0
+
+    objective = cp.Maximize(alpha * cp.sum(q) - beta * imbalance)
+
+    prob = cp.Problem(objective, constraints)
+    try:
+        prob.solve(verbose=False)
+        if prob.status in ("optimal", "optimal_inaccurate") and t_in.value is not None:
+            return t_in.value, t_out.value
+    except Exception:
+        pass
+
+    return None, None
