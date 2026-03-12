@@ -42,6 +42,19 @@ class ConvexAgent(Player):
         if state.is_initial_build_phase:
             return self._initial(actions, game)
         if state.current_prompt != ActionPrompt.PLAY_TURN:
+            # If we are being asked to move the robber, choose a fairness-aligned
+            # robber action rather than defaulting arbitrarily.
+            robber_actions = [
+                a for a in actions if a.action_type == ActionType.MOVE_ROBBER
+            ]
+            if robber_actions:
+                from agents.convex_solver import score_robber_hexes_fairness
+
+                scores = score_robber_hexes_fairness(game)
+                return max(
+                    robber_actions,
+                    key=lambda a: scores.get(a.value[0], 0.0),
+                )
             return actions[0]
 
         build = [a for a in actions if a.action_type in (
