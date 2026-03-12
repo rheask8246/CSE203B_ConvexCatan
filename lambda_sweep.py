@@ -108,6 +108,8 @@ def _rows_from_summary(seed: int, method: str, lambda_value: float | None, summa
     ent = np.asarray(summary["entropy_by_player"], dtype=float)
     gaps = np.asarray(summary["gap_from_max_by_player"], dtype=float)
 
+    weakest = float(np.min(v)) if v.size else np.nan
+    strongest = float(np.max(v)) if v.size else np.nan
     game_row = {
         "seed": seed,
         "method": method,
@@ -116,8 +118,9 @@ def _rows_from_summary(seed: int, method: str, lambda_value: float | None, summa
         "max_min_ratio": float(summary["max_min_ratio"]),
         "total_expected_production": float(summary["total_expected_production"]),
         "mean_entropy": float(summary["mean_entropy"]),
-        "weakest_production": float(np.min(v)) if v.size else np.nan,
-        "strongest_production": float(np.max(v)) if v.size else np.nan,
+        "weakest_production": weakest,
+        "strongest_production": strongest,
+        "production_gap": float(strongest - weakest) if (v.size and np.isfinite(strongest) and np.isfinite(weakest)) else np.nan,
     }
 
     player_rows = []
