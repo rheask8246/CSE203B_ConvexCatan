@@ -48,19 +48,23 @@ The feasible region is given by affine (linear) constraints.
 **Placement budget per player (initial phase)**  
 
 Each player must place exactly two settlements:
+
 $$
 \sum_{l \in L} x_{pl} = 2 \quad \forall p.
 $$
 
 In mid-game, this is relaxed to:
+
 $$
 \sum_{l \in L} x_{pl} \le \text{budget}_p,
 $$
+
 where $\text{budget}_p$ depends on how many settlements/cities player $p$ already has.
 
 **Location capacity constraint**  
 
 Each location can be used by at most one player:
+
 $$
 \sum_{p=1}^P x_{pl} \le 1 \quad \forall l.
 $$
@@ -69,6 +73,7 @@ $$
 
 Let $E \subseteq L \times L$ be the set of adjacent location pairs. To enforce
 the “no adjacent settlements” rule in relaxed form, impose:
+
 $$
 \sum_{p=1}^P (x_{pl} + x_{pm}) \le 1 \quad \forall (l,m) \in E.
 $$
@@ -83,6 +88,7 @@ cp.sum(x[:, u]) + cp.sum(x[:, v]) <= 1
 **Occupied locations (mid-game)**  
 
 If a node already contains a building, then no LP mass may be put there:
+
 $$
 \sum_p x_{pl} = 0 \quad \forall l \text{ already occupied}.
 $$
@@ -186,7 +192,7 @@ $\rho_h$ are treated as **exogenous parameters**, not variables of the LP.
 Intuitively, they encode a scenario about how often each hex is blocked (for
 example, from empirical data or a fixed robber policy).
 
-Because $\rho_h$ only appear through the coefficients $a^{\text{rob}}_{lk}$,
+Because $\rho_h$ only appear through the coefficients $a^{\text{rob}}\_{lk}$,
 the decision variables $x_{pl}$ still enter the objective and constraints
 **linearly**. We simply solve the same fair-allocation LP with $A$ replaced
 by $A^{\text{rob}}$:
