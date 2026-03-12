@@ -1,4 +1,11 @@
-.DS_Store
-# Ignore the virtual environment directory
+# Virtual environment
 .venv/
+
+# Python bytecode
 __pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# macOS metadata
+.DS_Store
