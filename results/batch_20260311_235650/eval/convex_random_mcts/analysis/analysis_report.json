@@ -1,0 +1,14 @@
+{
+  "input_dir": "results/batch_20260311_235650/eval/convex_random_mcts",
+  "rows": {
+    "player_metrics": 300,
+    "game_metrics": 100
+  },
+  "agents": [
+    "MCTS",
+    "R",
+    "CONVEX"
+  ],
+  "best_win_rate_agent": "MCTS",
+  "best_win_rate": 0.59
+}

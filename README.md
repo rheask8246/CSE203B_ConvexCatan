@@ -151,3 +151,52 @@ Outputs in `results/plots`:
 - `pairwise_vp_diff_heatmap.png`
 - `pareto_fairness_winrate_compute.png`
 - `turn_order_effect_win_rate.png`
+
+## LP Lambda Sweep (Initial Placement Fairness)
+
+This experiment measures LP fairness/efficiency directly on initial-placement expected production.
+
+### 1) Run lambda sweep
+
+```bash
+python lambda_sweep.py \
+  --num-seeds 300 \
+  --lambda-start 0 \
+  --lambda-end 2 \
+  --lambda-count 25 \
+  --num-players 3 \
+  --outdir results/lambda_sweep
+```
+
+Outputs in `results/lambda_sweep`:
+
+- `lambda_sweep_game_metrics.csv`
+- `lambda_sweep_player_metrics.csv`
+- `lambda_sweep_duals.csv`
+- `lambda_sweep_summary.csv`
+- `metadata.json`
+
+Metrics include:
+
+- Production Gini across players
+- Max-min production ratio
+- Total expected production
+- Mean Shannon entropy (resource diversity)
+- Capacity-constraint dual values (shadow prices)
+
+### 2) Plot lambda sweep results
+
+```bash
+python visualize_lambda_sweep.py --input-dir results/lambda_sweep --target-lambda 0.5
+```
+
+Outputs in `results/lambda_sweep/plots`:
+
+- `gini_vs_lambda.png`
+- `entropy_vs_lambda.png`
+- `total_expected_production_vs_lambda.png`
+- `pareto_total_production_vs_gini.png`
+- `entropy_violin_by_method.png`
+- `max_min_ratio_by_method.png`
+- `production_gap_hist_by_method.png`
+- `dual_heatmap_capacity.png`

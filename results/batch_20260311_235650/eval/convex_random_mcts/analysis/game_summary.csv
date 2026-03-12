@@ -1,0 +1,2 @@
+lineup,n_games,avg_turns,avg_duration_s,avg_vp_std,avg_vp_gini,avg_vp_range
+"CONVEX,R,MCTS",100,306.73,6.56905703,2.99101148,0.25569692,6.94
