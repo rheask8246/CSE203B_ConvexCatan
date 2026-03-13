@@ -1,4 +1,0 @@
-agent,n_rows,win_rate,win_rate_ci_low,win_rate_ci_high,avg_final_vp,avg_final_vp_ci_low,avg_final_vp_ci_high,avg_rank,avg_turns,avg_decide_ms,avg_vp_minus_table_mean,avg_game_vp_gini,longest_road_rate,largest_army_rate,avg_roads_built,avg_settlements_built,avg_cities_built
-WR,100,0.52,0.42,0.6102499999999986,7.42,6.81975,8.05025,1.66,280.53,0.0031450700000000002,1.1899999700000001,0.25496949,0.39,0.5,11.2,2.62,0.77
-CONVEX,100,0.25,0.17,0.33,5.51,4.89975,6.15,2.11,280.53,3.0138908400000006,-0.7200000299999999,0.25496949,0.31,0.0,9.77,1.95,1.47
-R,100,0.23,0.15,0.31,5.76,5.20975,6.340249999999998,2.05,280.53,0.0003885500000000001,-0.47000003000000007,0.25496949,0.29,0.35,10.29,2.45,0.4

@@ -1,0 +1,13 @@
+{
+  "created_at": "2026-03-13 02:06:41",
+  "lineups": [
+    "CONVEX,R,VALUE"
+  ],
+  "num_games_per_lineup": 100,
+  "seed_start": 1,
+  "vps_to_win": 10,
+  "outputs": {
+    "player_metrics": "results/batch_20260313_015119/eval/convex_random_value/player_metrics.csv",
+    "game_metrics": "results/batch_20260313_015119/eval/convex_random_value/game_metrics.csv"
+  }
+}

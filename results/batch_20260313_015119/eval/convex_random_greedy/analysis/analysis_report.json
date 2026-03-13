@@ -1,0 +1,14 @@
+{
+  "input_dir": "results/batch_20260313_015119/eval/convex_random_greedy",
+  "rows": {
+    "player_metrics": 300,
+    "game_metrics": 100
+  },
+  "agents": [
+    "R",
+    "GREEDY",
+    "CONVEX"
+  ],
+  "best_win_rate_agent": "R",
+  "best_win_rate": 0.44
+}

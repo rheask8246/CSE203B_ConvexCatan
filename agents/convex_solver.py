@@ -116,7 +116,7 @@ def _adjacent_pairs():
     return [(min(a, b), max(a, b)) for a, b in edges if a < NUM_NODES and b < NUM_NODES]
 
 
-def run_lp(game, our_color, budgets, exact_budget=False, A_override=None, lambda_value=None):
+def run_lp_details(game, budgets, exact_budget=False, A_override=None, lambda_value=None):
     """
     Solve fair allocation LP: maximin across all players + balance penalty.
     exact_budget: if True, use sum_l x_pl = budget (initial placement); else <= (mid-game).
@@ -178,6 +178,25 @@ def run_lp(game, our_color, budgets, exact_budget=False, A_override=None, lambda
         pass
     return None
 
+
+def run_lp(game, our_color, budgets, exact_budget=False, A_override=None, lambda_value=None):
+    """
+    Solve fair allocation LP and return node scores for our player only.
+    """
+    details = run_lp_details(
+        game,
+        budgets,
+        exact_budget=exact_budget,
+        A_override=A_override,
+        lambda_value=lambda_value,
+    )
+    if details is None:
+        return None
+
+    colors = list(game.state.colors)
+    our_idx = colors.index(our_color)
+    return details["x"][our_idx]
+
 def solve_initial(game, our_color, A_override=None, lambda_value=None):
     """Node scores for initial placement (exactly 2 settlements each).
 
@@ -230,7 +249,13 @@ def solve_build(game, our_color, A_override=None, lambda_value=None):
 def solve_initial_all_players(game, A_override=None, lambda_value=None):
     """Solve initial-placement LP and return production/fairness metrics for all players."""
     budgets = [2] * len(game.state.colors)
-    details = run_lp(game, budgets, exact_budget=True, A_override=A_override, lambda_value=lambda_value)
+    details = run_lp_details(
+        game,
+        budgets,
+        exact_budget=True,
+        A_override=A_override,
+        lambda_value=lambda_value,
+    )
     if details is None:
         A = A_override if A_override is not None else _production_matrix(game)
         P = len(game.state.colors)

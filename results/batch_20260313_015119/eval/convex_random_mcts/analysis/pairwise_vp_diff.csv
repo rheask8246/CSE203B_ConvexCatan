@@ -1,0 +1,4 @@
+agent_i,CONVEX,MCTS,R
+CONVEX,,-3.08,-0.81
+MCTS,3.08,,2.27
+R,0.81,-2.27,

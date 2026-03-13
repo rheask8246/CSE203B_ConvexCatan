@@ -1,0 +1,14 @@
+{
+  "input_dir": "results/batch_20260313_015119/eval/convex_random_ab",
+  "rows": {
+    "player_metrics": 300,
+    "game_metrics": 100
+  },
+  "agents": [
+    "AB",
+    "CONVEX",
+    "R"
+  ],
+  "best_win_rate_agent": "AB",
+  "best_win_rate": 0.99
+}
