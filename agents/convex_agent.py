@@ -1,36 +1,29 @@
 """
-ConvexAgent v5 — Fairness-first with early-game development and 2-step lookahead.
+ConvexAgent — Fair resource allocation via convex optimization (LP).
 
-- Early game (VP < 3): prioritize production to reach 4-6 VP
-- Mid game: enforce fairness (alpha = min(1.0, vp/4))
-- Node blocking: prevent leader from taking high-impact nodes (BLOCK_WEIGHT=1.5)
-- Impact weight: critical nodes weighted by dice probability (IMPACT_WEIGHT=0.3)
-- Robber: block hex with largest total production
-- Roads: max fairness of reachable nodes
-- Trade: maximize hand entropy, penalize duplicate stacks
-- 2-step lookahead for settlement placement
+Uses the convex solver (CVXPY) for:
+- Initial placement: fair allocation LP (solve_initial)
+- Mid-game builds: same LP with remaining budgets (solve_build + score_action)
+- Robber: block hex contributing most to leader's production
+- Trade: LP to maximize total resources + hand balance (solve_trade_and_build)
+
+Falls back to fairness_gain_scores when the LP is infeasible.
 """
 
 from catanatron.models.player import Player
 from catanatron.models.enums import ActionType, ActionPrompt
 
-from agents.fairness_scoring import (
-    _production_matrix,
-    _production_matrix_with_robber,
-    W,
-    fairness_node_scores,
-    fairness_road_scores,
-    robber_hex_scores,
-    entropy_trade_suggestion,
-    city_fairness_score,
-    _reachable_from_road,
-    _our_vp,
+from agents.convex_solver import (
+    solve_initial,
+    solve_build,
+    score_action,
+    score_robber_hexes_fairness,
+    get_best_maritime_trade,
 )
-from catanatron.models.board import get_edges
 
 
 class ConvexAgent(Player):
-    """Fairness-first agent: minimize global inequality, early game builds economy."""
+    """Fair resource allocation agent using convex optimization (LP)."""
 
     def __init__(self, color, lambda_value=None, mu_value=None,
                  self_floor=None, is_bot=True):
@@ -78,32 +71,35 @@ class ConvexAgent(Player):
         return actions[0]
 
     def _initial(self, actions, game):
-        A = _production_matrix(game)
-        vp = _our_vp(game, self.color)
+        """Initial placement: LP-based fair allocation scores."""
         settle = [a for a in actions if a.action_type == ActionType.BUILD_SETTLEMENT]
         road = [a for a in actions if a.action_type == ActionType.BUILD_ROAD]
 
-        node_scores = fairness_node_scores(game, self.color, A, W, vp, use_lookahead=True)
+        scores = solve_initial(
+            game, self.color,
+            lambda_value=self.lambda_value,
+            mu_value=self.mu_value,
+            self_floor=self.self_floor,
+        )
 
         if settle:
-            return max(settle, key=lambda a: float(node_scores[a.value]))
+            return max(settle, key=lambda a: float(scores[a.value]))
 
         if road:
-            reachable = {
-                tuple(sorted([a.value[0], a.value[1]])): _reachable_from_road(game, a.value[0], a.value[1])
-                for a in road
-            }
-            road_scores = fairness_road_scores(game, self.color, A, W, vp, reachable)
-            return max(road, key=lambda a: road_scores.get(tuple(sorted([a.value[0], a.value[1]])), float('-inf')))
+            return max(
+                road,
+                key=lambda a: (float(scores[a.value[0]]) + float(scores[a.value[1]])) / 2,
+            )
 
         return actions[0]
 
     def _best_robber_action(self, robber_actions, game):
-        A = _production_matrix(game)
-        scores = robber_hex_scores(game, A, W)
+        """Block the hex contributing most to the leader's production."""
+        scores = score_robber_hexes_fairness(game)
         return max(robber_actions, key=lambda a: scores.get(a.value[0], 0.0))
 
     def _best_discard_action(self, discard_actions, game):
+        """Discard to maximize hand entropy (balanced resource distribution)."""
         from catanatron.models.enums import RESOURCES
         import numpy as np
         state = game.state
@@ -130,52 +126,36 @@ class ConvexAgent(Player):
         return max(discard_actions, key=entropy_after)
 
     def _best_build_decision(self, actions, game):
-        A = _production_matrix_with_robber(game)
-        vp = _our_vp(game, self.color)
-        node_scores = fairness_node_scores(game, self.color, A, W, vp, use_lookahead=True)
-
-        settlements = [a for a in actions if a.action_type == ActionType.BUILD_SETTLEMENT]
-        cities = [a for a in actions if a.action_type == ActionType.BUILD_CITY]
-        roads = [a for a in actions if a.action_type == ActionType.BUILD_ROAD]
-
-        candidates = []
-
-        for a in settlements:
-            n = a.value
-            s = float(node_scores[n]) if 0 <= n < len(node_scores) else float('-inf')
-            candidates.append((s, a))
-
-        for a in cities:
-            s = city_fairness_score(game, self.color, a.value, A, W)
-            candidates.append((s, a))
-
-        for a in roads:
-            u, v = a.value[0], a.value[1]
-            reachable = {tuple(sorted([u, v])): _reachable_from_road(game, u, v)}
-            road_scores = fairness_road_scores(game, self.color, A, W, vp, reachable)
-            s = road_scores.get(tuple(sorted([u, v])), float('-inf'))
-            candidates.append((s, a))
-
-        if not candidates:
+        """Mid-game builds: LP-based node/edge scores + score_action."""
+        build = [
+            a for a in actions
+            if a.action_type in (
+                ActionType.BUILD_SETTLEMENT,
+                ActionType.BUILD_CITY,
+                ActionType.BUILD_ROAD,
+            )
+        ]
+        if not build:
             return None
 
-        priority = {
-            ActionType.BUILD_SETTLEMENT: 0,
-            ActionType.BUILD_CITY: 1,
-            ActionType.BUILD_ROAD: 2,
-        }
-        best_score, best_action = max(
-            candidates,
-            key=lambda x: (x[0], -priority.get(x[1].action_type, 9)),
+        node_scores, edge_scores, edge_to_idx = solve_build(
+            game, self.color,
+            lambda_value=self.lambda_value,
+            mu_value=self.mu_value,
+            self_floor=self.self_floor,
         )
-        return best_action
+        return max(
+            build,
+            key=lambda a: score_action(a, node_scores, edge_scores, edge_to_idx),
+        )
 
     def _best_trade_action(self, actions, game):
+        """Maritime trade: LP maximizes total resources + hand balance."""
         trade_actions = [a for a in actions if a.action_type == ActionType.MARITIME_TRADE]
         if not trade_actions:
             return None
 
-        suggestion = entropy_trade_suggestion(game, self.color, duplicate_penalty=0.5)
+        suggestion = get_best_maritime_trade(game, self.color)
         if suggestion is None:
             return None
 
