@@ -46,6 +46,19 @@ class ConvexAgent(Player):
         if state.is_initial_build_phase:
             return self._initial(actions, game)
         if state.current_prompt != ActionPrompt.PLAY_TURN:
+            # If we are being asked to move the robber, choose a fairness-aligned
+            # robber action rather than defaulting arbitrarily.
+            robber_actions = [
+                a for a in actions if a.action_type == ActionType.MOVE_ROBBER
+            ]
+            if robber_actions:
+                from agents.convex_solver import score_robber_hexes_fairness
+
+                scores = score_robber_hexes_fairness(game)
+                return max(
+                    robber_actions,
+                    key=lambda a: scores.get(a.value[0], 0.0),
+                )
             return actions[0]
 
         build = [a for a in actions if a.action_type in (
@@ -87,14 +100,3 @@ if register_cli_player:
     register_cli_player("AB", AlphaBetaPlayer)
     register_cli_player("VALUE", ValueFunctionPlayer)
     register_cli_player("WR", WeightedRandomPlayer)
-    
-# Example Setups:
-# CONVEX,RANDOM,GREEDY
-# CONVEX,RANDOM,MCTS
-# CONVEX,RANDOM,AB
-# CONVEX,RANDOM,VALUE
-# CONVEX,RANDOM,WR
-
-# do each of these and change lambda from 0 --> 2 (25 equally spaced points between 0 and 2) incrementally to see how it affects the tradeoff between win rate and fairness
-# start with 100 games and go from there...
-# add a Production per Agent plot
