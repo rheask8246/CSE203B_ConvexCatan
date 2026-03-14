@@ -104,13 +104,21 @@ Use these scripts to compare agents with reproducible seeds.
 
 ```bash
 python evaluate.py --num-games 300 --outdir results
-# custom scenarios:
+# custom test:
 python evaluate.py \
-  --lineup R,R,R,R \
-  --lineup GREEDY,R,R,R \
-  --lineup CONVEX,R,R,R \
-  --lineup MCTS,AB,VALUE,WR \
-  --num-games 300 \
+  --lineup R,R,R \
+  --lineup GREEDY,R,R \
+  --lineup MCTS,R,R \
+  --lineup AB,R,R \
+  --lineup VALUE,R,R \
+  --lineup WR,R,R \
+  --lineup R,R,CONVEX \
+  --lineup GREEDY,R,CONVEX \
+  --lineup MCTS,R,CONVEX \
+  --lineup AB,R,CONVEX \
+  --lineup VALUE,R,CONVEX \
+  --lineup WR,R,CONVEX \
+  --num-games 100 \
   --outdir results
 ```
 

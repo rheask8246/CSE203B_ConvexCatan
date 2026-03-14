@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-03-14 14:51:45",
+  "lineups": [
+    "R,R,R",
+    "GREEDY,R,R",
+    "MCTS,R,R",
+    "AB,R,R",
+    "VALUE,R,R",
+    "WR,R,R",
+    "R,R,CONVEX",
+    "GREEDY,R,CONVEX",
+    "MCTS,R,CONVEX",
+    "AB,R,CONVEX",
+    "VALUE,R,CONVEX",
+    "WR,R,CONVEX"
+  ],
+  "num_games_per_lineup": 50,
+  "seed_start": 1,
+  "vps_to_win": 10,
+  "track_production": false,
+  "outputs": {
+    "player_metrics": "results/player_metrics.csv",
+    "game_metrics": "results/game_metrics.csv"
+  }
+}
