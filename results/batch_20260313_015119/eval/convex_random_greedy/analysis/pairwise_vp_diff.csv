@@ -1,0 +1,4 @@
+agent_i,CONVEX,GREEDY,R
+CONVEX,,-0.7,-1.72
+GREEDY,0.7,,-1.02
+R,1.72,1.02,

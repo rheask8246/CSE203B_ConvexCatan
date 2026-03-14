@@ -35,6 +35,10 @@ except ImportError:
 class ConvexAgent(Player):
     """Fair resource allocation via convex LP (maximin + balance penalty)."""
 
+    def __init__(self, color, lambda_value=None, is_bot=True):
+        super().__init__(color, is_bot=is_bot)
+        self.lambda_value = lambda_value  # None = use solver default (0.5)
+
     def decide(self, game, playable_actions):
         actions = list(playable_actions)
         state = game.state
@@ -69,7 +73,7 @@ class ConvexAgent(Player):
 
         from agents.convex_solver import solve_build, score_action
 
-        node_scores, edge_scores, edge_to_idx = solve_build(game, self.color)
+        node_scores, edge_scores, edge_to_idx = solve_build(game, self.color, lambda_value=self.lambda_value)
         return max(build, key=lambda a: score_action(a, node_scores, edge_scores, edge_to_idx))
 
     def _initial(self, actions, game):
@@ -78,12 +82,12 @@ class ConvexAgent(Player):
 
         if settle:
             from agents.convex_solver import solve_initial
-            scores = solve_initial(game, self.color)
+            scores = solve_initial(game, self.color, lambda_value=self.lambda_value)
             return max(settle, key=lambda a: scores[a.value])
 
         if road:
             from agents.convex_solver import solve_initial
-            scores = solve_initial(game, self.color)
+            scores = solve_initial(game, self.color, lambda_value=self.lambda_value)
             return max(road, key=lambda a: (scores[a.value[0]] + scores[a.value[1]]) / 2)
 
         return actions[0]
@@ -96,4 +100,3 @@ if register_cli_player:
     register_cli_player("AB", AlphaBetaPlayer)
     register_cli_player("VALUE", ValueFunctionPlayer)
     register_cli_player("WR", WeightedRandomPlayer)
-    
